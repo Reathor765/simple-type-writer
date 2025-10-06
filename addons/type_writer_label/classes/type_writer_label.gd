@@ -2,23 +2,26 @@
 @tool
 class_name TypeWriterLabel extends RichTextLabel
 
+## Emitted when the last character from the text of the last [method write] has been typed.
 signal writing_done
 
-## in character/second. Time before the full text is displayed.
+## Current typing speed in character per second.
 @export_range(0.0, 1000.0) var typing_speed: float = 40.0:
 	set(value):
 		_typing_time_gap = 1.0 / typing_speed
 
 ## Optional. Plays whenever new characters are displayed on screen.
 @export var writing_sound_player: AudioStreamPlayer
-## Setup a pause after reaching a specific character.
+## Set [code]true[/code] if you want a pause after reaching a specific character.
 @export var pause_after_character: bool = false:
 	set(value):
 		pause_after_character = value
 		notify_property_list_changed()
-## 
-@export var pause_characters: Array[String] = ["."]
+## Duration of the pause after reaching a character from the [member pause_characters] list.
 @export var pause_duration: float = 1.0
+## Whenever a character from [member pause_characters] is reached, the [TypeWriterLabel] will stop typing for [member pause_duration] seconds.
+@export var pause_characters: Array[String] = ["."]
+
 
 var _text_to_type: String = ""
 var _typing: bool = false
@@ -81,7 +84,12 @@ func _is_pause_character(char: String) -> bool:
 	return false
 
 
-## Start typing the given text.
+## Returns [code]true[/code] if currently typing a text.
+func is_typing() -> bool:
+	return _typing
+
+
+## Type the given text at [member typing_speed] characters per seconds.
 func write(text_to_type: String) -> void:
 	_typing_time_gap = 1.0 / typing_speed
 	text = ""
@@ -99,6 +107,5 @@ func resume_typing() -> void:
 	set_deferred("_stopped", false)
 
 ## Skip current typing and display the whole text.
-## @experimental
 func skip_typing() -> void:
 	set_deferred("_typing_time_gap", 0.0)
