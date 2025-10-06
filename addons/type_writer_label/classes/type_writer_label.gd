@@ -5,7 +5,10 @@ class_name TypeWriterLabel extends RichTextLabel
 signal writing_done
 
 ## in character/second. Time before the full text is displayed.
-@export_range(0.0, 1000.0) var typing_speed: float = 40.0
+@export_range(0.0, 1000.0) var typing_speed: float = 40.0:
+	set(value):
+		_typing_time_gap = 1.0 / typing_speed
+
 ## Optional. Plays whenever new characters are displayed on screen.
 @export var writing_sound_player: AudioStreamPlayer
 ## Setup a pause after reaching a specific character.
@@ -39,7 +42,6 @@ func _validate_property(property: Dictionary) -> void:
 # MAIN FUNCTIONS
 func _ready() -> void:
 	if !Engine.is_editor_hint():
-		_typing_time_gap = 1.0 / typing_speed
 		if !text.is_empty():
 			write(text)
 
@@ -81,17 +83,12 @@ func _is_pause_character(char: String) -> bool:
 
 ## Start typing the given text.
 func write(text_to_type: String) -> void:
+	_typing_time_gap = 1.0 / typing_speed
 	text = ""
 	_typing_timer = 0.0
 	_pause_timer = 0.0
 	_text_to_type = text_to_type
 	_typing = true
-
-
-## Speed up current typing by the speed_scale amount. Will also skip pauses if asked for.
-## @experimental
-func speed_up_typing(speed_scale: float, skip_pauses: bool = false) -> void:
-	pass
 
 ## @experimental
 func pause_typing() -> void:
@@ -101,8 +98,7 @@ func pause_typing() -> void:
 func resume_typing() -> void:
 	set_deferred("_stopped", false)
 
-
 ## Skip current typing and display the whole text.
 ## @experimental
 func skip_typing() -> void:
-	pass
+	set_deferred("_typing_time_gap", 0.0)
