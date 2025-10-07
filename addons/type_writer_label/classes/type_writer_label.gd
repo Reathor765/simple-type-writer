@@ -2,8 +2,8 @@
 @tool
 class_name TypeWriterLabel extends RichTextLabel
 
-## Emitted when the last character from the text of the last [method write] has been typed.
-signal writing_done
+## Emitted when the last character from the text of the last [method typewrite] has been typed.
+signal typewriting_done
 
 ## Current typing speed in character per second.
 @export_range(0.0, 1000.0) var typing_speed: float = 40.0:
@@ -11,30 +11,33 @@ signal writing_done
 		_typing_time_gap = 1.0 / typing_speed
 
 ## Optional. Plays whenever new characters are displayed on screen.
-@export var writing_sound_player: AudioStreamPlayer
-## Set [code]true[/code] if you want a pause after reaching a specific character.
-@export var pause_after_character: bool = false:
+@export var typing_sound_player: AudioStreamPlayer
+## Set [code]true[/code] if you want a stop after reaching a specific character.[br][br]
+## [b]Do not mistake the stop for the pause[/b].[br][br]
+## The [b]stop[/b] happens when reaching [member stop_characters] and has a duration defined by [member stop_duration]. After that, the typing [b]will automatically resume[/b].[br]
+## The [b]pause[/b] is called by [method pause_typing], and the typing [b]will only resume after calling [method resume_typing][/b].
+@export var stop_after_character: bool = false:
 	set(value):
-		pause_after_character = value
+		stop_after_character = value
 		notify_property_list_changed()
-## Duration of the pause after reaching a character from the [member pause_characters] list.
-@export var pause_duration: float = 1.0
-## Whenever a character from [member pause_characters] is reached, the [TypeWriterLabel] will stop typing for [member pause_duration] seconds.
-@export var pause_characters: Array[String] = ["."]
+## Duration of the stop after reaching [member stop_characters].
+@export var stop_duration: float = 1.0
+## Whenever reaching [member stop_characters], the [TypeWriterLabel] will stop typing for [member stop_duration] seconds.
+@export var stop_characters: Array[String] = ["."]
 
 
 var _text_to_type: String = ""
 var _typing: bool = false
 var _typing_time_gap: float = 0.0
 var _typing_timer: float = 0.0
-var _pause_timer: float = 0.0
-var _stopped: bool = false
+var _stop_timer: float = 0.0
+var _paused: bool = false
 
 
 # INSPECTOR CONFIGURATION
 func _validate_property(property: Dictionary) -> void:
 	var hide_list = []
-	if !pause_after_character:
+	if !stop_after_character:
 		hide_list.append("pause_characters")
 		hide_list.append("pause_duration")
 
@@ -46,14 +49,14 @@ func _validate_property(property: Dictionary) -> void:
 func _ready() -> void:
 	if !Engine.is_editor_hint():
 		if !text.is_empty():
-			write(text)
+			typewrite(text)
 
 
 func _process(delta: float) -> void:
 	if !Engine.is_editor_hint():
-		if _typing:
-			if !_stopped && !_text_to_type.is_empty():
-				if _pause_timer <= 0:
+		if _typing && !_paused:
+			if !_text_to_type.is_empty():
+				if _stop_timer <= 0:
 					# Compute how much chars shall be written on the current frame.
 					# More than 1 character can be written if the typing speed is higher than current framerate.
 					var next_chars := ""
@@ -62,50 +65,56 @@ func _process(delta: float) -> void:
 						_text_to_type = _text_to_type.erase(0)
 						next_chars += next_char
 						_typing_timer += _typing_time_gap
-						# However if a "pause" character is reached, do not type more characters for the current frame.
-						if pause_after_character && _is_pause_character(next_char):
-							_pause_timer = pause_duration
+						# If a "stop" character is reached, do not type more characters for the current frame.
+						if stop_after_character && _is_stop_character(next_char):
+							_stop_timer = stop_duration
 							break
 					text += next_chars
 					# Play writing sound if exists and is not playing.
-					if writing_sound_player && !writing_sound_player.playing:
-						writing_sound_player.play()
+					if typing_sound_player && !typing_sound_player.playing:
+						typing_sound_player.play()
 					_typing_timer -= delta
-				_pause_timer -= delta
-			else: # Finish typing
-				writing_done.emit()
+				_stop_timer -= delta
+			else: # If typing, but has no more text to type, means the typing is done.
+				typewriting_done.emit()
 				_typing = false
 
 
-func _is_pause_character(char: String) -> bool:
-	for pause_char in pause_characters:
-		if char == pause_char:
+func _is_stop_character(char: String) -> bool:
+	for stop_char in stop_characters:
+		if char == stop_char:
 			return true
 	return false
 
 
-## Returns [code]true[/code] if currently typing a text.
+## Returns [code]true[/code] if still has some text to type.
+## It means that even if typing is paused or stopped, [method is_typing] still returns [code]true[/code].
 func is_typing() -> bool:
 	return _typing
 
+## Returns [code]true[/code] if typing is paused, typically by calling [method pause_typing].
+func is_paused() -> bool:
+	return _paused
 
 ## Type the given text at [member typing_speed] characters per seconds.
-func write(text_to_type: String) -> void:
+func typewrite(text_to_type: String) -> void:
 	_typing_time_gap = 1.0 / typing_speed
 	text = ""
 	_typing_timer = 0.0
-	_pause_timer = 0.0
+	_stop_timer = 0.0
 	_text_to_type = text_to_type
-	_typing = true
+	set_deferred("_paused", false)
+	set_deferred("_typing", true)
 
-## @experimental
+## Pause the current typing. Call [method resume_typing] to resume it.[br][br]
+## If you want to set automatic quick pauses after reaching specific characters, you should check [member stop_after_character] option.
 func pause_typing() -> void:
-	set_deferred("_stopped", true)
+	set_deferred("_paused", true)
 
-## @experimental
+## Resume the current typing.
 func resume_typing() -> void:
-	set_deferred("_stopped", false)
+	set_deferred("_paused", false)
 
-## Skip current typing and display the whole text.
+## Skip current typing and display the whole text. Will also resume typing just like calling [method resume_typing].
 func skip_typing() -> void:
 	set_deferred("_typing_time_gap", 0.0)
