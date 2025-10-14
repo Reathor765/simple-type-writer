@@ -8,7 +8,9 @@ signal typewriting_done
 ## Current typing speed in character per second.
 @export_range(0.0, 1000.0) var typing_speed: float = 40.0:
 	set(value):
-		_typing_time_gap = 1.0 / typing_speed
+		typing_speed = value
+		if !Engine.is_editor_hint():
+			_typing_time_gap = 1.0 / typing_speed
 
 ## Optional. Plays whenever new characters are displayed on screen.
 @export var typing_sound_player: AudioStreamPlayer
@@ -38,8 +40,8 @@ var _paused: bool = false
 func _validate_property(property: Dictionary) -> void:
 	var hide_list = []
 	if !stop_after_character:
-		hide_list.append("pause_characters")
-		hide_list.append("pause_duration")
+		hide_list.append("stop_characters")
+		hide_list.append("stop_duration")
 
 	if property.name in hide_list:
 		property.usage = PROPERTY_USAGE_NO_EDITOR
