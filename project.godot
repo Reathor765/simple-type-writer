@@ -11,9 +11,11 @@ config_version=5
 [application]
 
 config/name="SimpleTypeWriter Plugin"
+run/main_scene="uid://c7c1kit14o67t"
 config/features=PackedStringArray("4.5", "Forward Plus")
 run/max_fps=60
+config/icon="uid://cwuqryhkokbor"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/type_write_label/plugin.cfg", "res://addons/type_writer_label/plugin.cfg")
+enabled=PackedStringArray("res://addons/type_writer_label/plugin.cfg")

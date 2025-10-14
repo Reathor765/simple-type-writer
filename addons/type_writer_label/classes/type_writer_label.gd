@@ -71,7 +71,7 @@ func _process(delta: float) -> void:
 						if stop_after_character && _is_stop_character(next_char):
 							_stop_timer = stop_duration
 							break
-					text += next_chars
+					visible_characters += next_chars.length()
 					# Play writing sound if exists and is not playing.
 					if typing_sound_player && !typing_sound_player.playing:
 						typing_sound_player.play()
@@ -99,14 +99,26 @@ func is_paused() -> bool:
 	return _paused
 
 ## Type the given text at [member typing_speed] characters per seconds.
+## The given text can be BBCode.
 func typewrite(text_to_type: String) -> void:
 	_typing_time_gap = 1.0 / typing_speed
-	text = ""
+	visible_characters = 0
+	text = text_to_type
+	# Remove BBCode from text to follow raw text typing.
+	_text_to_type = _get_raw_text_from_bbcode(text_to_type)
 	_typing_timer = 0.0
 	_stop_timer = 0.0
-	_text_to_type = text_to_type
 	set_deferred("_paused", false)
 	set_deferred("_typing", true)
+
+func _get_raw_text_from_bbcode(bbcode: String) -> String:
+	var regex = RegEx.new()
+	# Replace [img]{path}[/img] by an escape " ". It is considered as 1 character by the RichTextLabel.
+	regex.compile("\\[img.*\\].*\\[\\/img\\]")
+	var bbcode_without_img = regex.sub(bbcode, " ", true)
+	# Then remove any other BBCode.
+	regex.compile("\\[[^\\]]+\\]")
+	return regex.sub(bbcode_without_img, "", true)
 
 ## Pause the current typing. Call [method resume_typing] to resume it.[br][br]
 ## If you want to set automatic quick pauses after reaching specific characters, you should check [member stop_after_character] option.
