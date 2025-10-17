@@ -54,6 +54,8 @@ Add a `TypeWriterLabel`node then:
 - If you fill the inherited `text` field in the inspector, when entering the scene tree, the `TypeWriterLabel`will start typing this text.
 - Call the `typewrite(text_to_type: String)` function to ask the `TypeWriterLabel`to type the given text.
 
+/!\ If your text does not fit into the control borders, then enable `scroll_following_visible_characters` on your `TypeWriterLabel`. (You might also want to disable `scroll_active` to hide the scrollbar)
+
 ### Manage the typing speed
 Set the `typing_speed` parameter in the inspector or by code. You can lower or increase the speed while the `TypeWriterLabel`is actually typing a text.
 
