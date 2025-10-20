@@ -1,4 +1,4 @@
-# TypeWriterLabel <img src="https://github.com/Pignomaster/simple-type-writer/blob/main/github_assets/typewriterlabel.png" width="24">
+# TypeWriterLabel <img src="https://raw.githubusercontent.com/Pignomaster/simple-type-writer/refs/heads/main/github_assets/typewriterlabel.png?token=GHSAT0AAAAAADJJIRQF6WCMUODKLFRKAJVO2HTRGBA" width="24">
 
 Add a new node providing "typing" effect to your `RichTextLabel`. Configure speed, play sound and stop on specific characters to animate your typewriter.
 Compatible with BBCode.
