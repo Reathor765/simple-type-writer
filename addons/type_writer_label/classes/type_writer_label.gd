@@ -11,7 +11,6 @@ signal typewriting_done
 		typing_speed = value
 		if !Engine.is_editor_hint():
 			_typing_time_gap = 1.0 / typing_speed
-
 ## Optional. Plays whenever new characters are displayed on screen.
 @export var typing_sound_player: AudioStreamPlayer
 ## Set [code]true[/code] if you want a stop after reaching a specific character.[br][br]
@@ -94,9 +93,11 @@ func _is_stop_character(char: String) -> bool:
 func is_typing() -> bool:
 	return _typing
 
+
 ## Returns [code]true[/code] if typing is paused, typically by calling [method pause_typing].
 func is_paused() -> bool:
 	return _paused
+
 
 ## Type the given text at [member typing_speed] characters per seconds.
 ## The given text can be BBCode.
@@ -111,6 +112,7 @@ func typewrite(text_to_type: String) -> void:
 	set_deferred("_paused", false)
 	set_deferred("_typing", true)
 
+
 func _get_raw_text_from_bbcode(bbcode: String) -> String:
 	var regex = RegEx.new()
 	# Replace [img]{path}[/img] by an escape " ". It is considered as 1 character by the RichTextLabel.
@@ -120,14 +122,17 @@ func _get_raw_text_from_bbcode(bbcode: String) -> String:
 	regex.compile("\\[[^\\]]+\\]")
 	return regex.sub(bbcode_without_img, "", true)
 
+
 ## Pause the current typing. Call [method resume_typing] to resume it.[br][br]
 ## If you want to set automatic quick pauses after reaching specific characters, you should check [member stop_after_character] option.
 func pause_typing() -> void:
 	set_deferred("_paused", true)
 
+
 ## Resume the current typing.
 func resume_typing() -> void:
 	set_deferred("_paused", false)
+
 
 ## Skip current typing and display the whole text. Will also resume typing just like calling [method resume_typing].
 func skip_typing() -> void:
